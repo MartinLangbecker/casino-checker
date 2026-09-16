@@ -52,7 +52,7 @@ VEGAN_CONFLICTS = ['joghurt', 'yoghurt', 'käse', 'cheese', 'sahne', 'butter', '
 # -----------------------------------------------------------------------------
 # Allergen codes (as declared in the PDFs).
 # -----------------------------------------------------------------------------
-DAIRY_ALLERGENS = frozenset({'g', 'g1', 'g2', 'g3', 'g4', 'g5', 'g6', 'g7'})
+DAIRY_ALLERGENS = frozenset({'g', 'g1'})
 EGG_ALLERGENS = frozenset({'c'})
 # Fisch (d), Krebstiere (b) und Weichtiere (n) sind tierische Allergene, die
 # vegan UND vegetarisch ausschließen. Empfehlung daher FISCH-Signet.

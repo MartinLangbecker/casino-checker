@@ -85,19 +85,27 @@ Gesetzlich vorgeschriebene Kennzeichnung (EU-LMIV). Codes wie in den Casino-PDFs
 | a | Glutenhaltiges Getreide |
 | a1 | Weizen |
 | a2 | Roggen |
-| a3 | Gerste (Dinkel) |
+| a3 | Gerste |
+| a4 | Hafer |
+| a5 | Dinkel |
+| a6 | Kamut |
+| a7 | Hybridstämme davon |
 | b | Krebstiere |
 | c | Eier |
 | d | Fisch |
 | e | Erdnüsse |
-| f | Schalenfrüchte (Nüsse) |
-| g | Milch (einschl. Laktose) |
+| f | Soja |
+| g | Milch und Milcherzeugnisse (inkl. Laktose) |
 | g1 | Laktose |
-| h | Schalenfrüchte (spezifisch) |
+| h | Schalenfrüchte und Nüsse |
 | h1 | Mandeln |
 | h2 | Haselnüsse |
 | h3 | Walnüsse |
 | h4 | Cashewnüsse |
+| h5 | Pekannüsse |
+| h6 | Paranüsse |
+| h7 | Pistazien |
+| h8 | Macadamia-/Queenslandnüsse |
 | i | Sellerie |
 | j | Senf |
 | k | Sesam |
