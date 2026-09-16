@@ -1,19 +1,21 @@
 # Referenz
 
-Nachschlage-Referenz zu Prüfregeln, Casino-Kürzeln, Signets und Allergenen.
+Nachschlage-Referenz zu Prüfregeln, Casino-Kürzeln, Signets, Allergenen und Zusatzstoffen.
 
 ## Prüfregeln (Konfidenz-Stufen)
 
-### Hohe Konfidenz (`signet_allergen_conflict`, `category_allergen_conflict`)
+### Hohe Konfidenz (`signet_allergen_conflict`, `category_allergen_conflict`, `signet_additive_conflict`, `category_additive_conflict`)
 - VEGAN-Signet + Milch-Allergen (g/g1) → Signet falsch
 - VEGAN-Signet + Ei-Allergen (c) → Signet falsch
+- VEGAN-Signet/-Kategorie + Molkerei-Zusatzstoff (18/18.1–18.5) → nicht vegan (auch ohne Milch-Allergen)
 - Kategorie "Veganes Gericht" + tierisches Allergen → Kategorie-Text falsch
 - Vegetarische/Vegane Kategorie + Fleisch-Signet → Signet oder Kategorie falsch
 
-### Mittlere Konfidenz (`signet_keyword_conflict`, `signet_category_conflict`)
+### Mittlere Konfidenz (`signet_keyword_conflict`, `signet_category_conflict`, `signet_additive_conflict`)
 - SCHWEIN-Signet auf Geflügelgericht
 - GEFLÜGEL-Signet auf Fischgericht
 - VEGETARISCH-Signet auf Fleischgericht
+- VEGAN-Signet + Zusatzstoff 7 (gewachst) → Wachs kann tierisch sein, Prüfhinweis
 
 ### Niedrige Konfidenz (`missing_signet`)
 - Gericht mit erkannter Kategorie aber ohne Signet
@@ -119,3 +121,19 @@ Für die Konsistenzprüfung relevant:
 - **b** (Krebstiere) → widerspricht VEGAN und VEGETARISCH (→ FISCH)
 - **d** (Fisch) → widerspricht VEGAN und VEGETARISCH, bestätigt FISCH-Signet
 - **n** (Weichtiere) → widerspricht VEGAN und VEGETARISCH (→ FISCH)
+
+## Zusatzstoffe
+
+Kennzeichnungspflichtige Zusatzstoffe, in den PDFs als `Zusatzstoffe: 2, 3, 18.1` (komma-separierte Codes) deklariert. Für die Konsistenzprüfung sind nur zwei Codes relevant, beide als Nicht-Vegan-Indikator:
+
+| Code | Zusatzstoff | Konfidenz | Bedeutung für Prüfung |
+|------|-------------|-----------|-----------------------|
+| 7 | gewachst | mittel | Wachs kann tierisch (Bienenwachs, Schellack) oder pflanzlich (Carnauba) sein → Prüfhinweis bei VEGAN-Signet |
+| 18 | mit Molkereiprodukt/-en | hoch | eindeutig nicht vegan |
+| 18.1 | mit Milcheiweiß | hoch | eindeutig nicht vegan |
+| 18.2 | mit Milchpulver | hoch | eindeutig nicht vegan |
+| 18.3 | mit Molkenpulver | hoch | eindeutig nicht vegan |
+| 18.4 | unter Verwendung von Milch | hoch | eindeutig nicht vegan |
+| 18.5 | unter Verwendung von Sahne | hoch | eindeutig nicht vegan |
+
+Molkerei-Zusatzstoffe (18.x) fangen Fälle, in denen Milch enthalten ist, aber **kein** Milch-Allergen (g/g1) deklariert wurde. Alle übrigen Zusatzstoff-Codes (Farbstoff, Konservierung, Süßungsmittel etc.) sind für die Vegan-Prüfung nicht relevant.

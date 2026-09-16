@@ -18,7 +18,8 @@ from consistency import (  # noqa: E402
 )
 
 
-def make_dish(dish='', category='', allergene='', signets=None, price_db=None, is_addon=False):
+def make_dish(dish='', category='', allergene='', signets=None, price_db=None,
+              is_addon=False, zusatzstoffe=''):
     """Build a dish record with sensible defaults."""
     return {
         'day': 'Montag',
@@ -26,6 +27,7 @@ def make_dish(dish='', category='', allergene='', signets=None, price_db=None, i
         'category': category,
         'dish': dish,
         'allergene': allergene,
+        'zusatzstoffe': zusatzstoffe,
         'price_db': price_db,
         'signets': signets or [],
         'is_addon': is_addon,
@@ -159,6 +161,43 @@ def test_vegan_category_with_dairy_allergen():
     dish = make_dish(dish='Auflauf', category='Veganes Gericht', allergene='g')
     findings = check_consistency(dish)
     assert 'category_allergen_conflict' in issue_types(findings)
+
+
+# --- Zusatzstoffe (Molkerei 18.x / gewachst 7) ------------------------------
+
+def test_vegan_signet_with_dairy_additive_18():
+    # Molkerei-Zusatzstoff 18.1 ohne Milch-Allergen → trotzdem nicht vegan.
+    dish = make_dish(dish='Auflauf', signets=['VEGAN'], zusatzstoffe='2, 18.1')
+    findings = check_consistency(dish)
+    conflict = next(f for f in findings if f['issue_type'] == 'signet_additive_conflict')
+    assert conflict['confidence'] == 'high'
+    assert conflict['recommendation']['suggested_signet'] == 'VEGETARISCH'
+
+
+def test_vegan_signet_with_wax_additive_7():
+    dish = make_dish(dish='Obstsalat', signets=['VEGAN'], zusatzstoffe='7')
+    findings = check_consistency(dish)
+    conflict = next(f for f in findings if f['issue_type'] == 'signet_additive_conflict')
+    assert conflict['confidence'] == 'medium'
+
+
+def test_vegan_category_with_dairy_additive():
+    dish = make_dish(dish='Auflauf', category='Veganes Gericht', zusatzstoffe='18.2')
+    findings = check_consistency(dish)
+    assert 'category_additive_conflict' in issue_types(findings)
+
+
+def test_vegan_signet_harmless_additives_no_finding():
+    # Zusatzstoffe 2, 3 (Konservierung/Antioxidation) sind kein Vegan-Konflikt.
+    dish = make_dish(dish='Gemüsecurry', signets=['VEGAN'], zusatzstoffe='2, 3')
+    assert check_consistency(dish) == []
+
+
+def test_non_vegan_signet_dairy_additive_ignored():
+    # Zusatzstoff-Check greift nur bei VEGAN, nicht bei anderen Signets.
+    dish = make_dish(dish='Käsespätzle', signets=['VEGETARISCH'], zusatzstoffe='18.1')
+    findings = check_consistency(dish)
+    assert 'signet_additive_conflict' not in issue_types(findings)
 
 
 # --- Missing signet ---------------------------------------------------------

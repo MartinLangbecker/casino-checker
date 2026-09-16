@@ -7,9 +7,9 @@ Automatisierte Konsistenzprüfung der DB Casino Speisekarten-PDFs. Erkennt fehle
 1. **PDF-Download**: Alle ~80 Casino-Speisekarten werden von `casino-net.app.db.de` heruntergeladen
 2. **Grid-Extraktion**: Tabellenstruktur (Spalten = Wochentage, Zeilen = Gerichtkategorien) wird per `pdfplumber` erkannt
 3. **Signet-Klassifikation**: Eingebettete Icons werden per Pixel-Analyse (Aspect Ratio + Farbverteilung) klassifiziert
-4. **Konsistenzprüfung**: Signets werden gegen Allergene und Gerichtbeschreibungen validiert
+4. **Konsistenzprüfung**: Signets werden gegen Allergene, Zusatzstoffe und Gerichtbeschreibungen validiert
 
-Details zu den Prüfregeln, Signets und Allergen-Codes: siehe [docs/referenz.md](docs/referenz.md).
+Details zu den Prüfregeln, Signets, Allergen- und Zusatzstoff-Codes: siehe [docs/referenz.md](docs/referenz.md).
 
 ## Voraussetzungen
 
@@ -87,6 +87,6 @@ casino-checker/
 
 ## Dokumentation
 
-- [docs/referenz.md](docs/referenz.md) — Prüfregeln, Casino-Kürzel, Signet-Erkennung, Allergene
+- [docs/referenz.md](docs/referenz.md) — Prüfregeln, Casino-Kürzel, Signet-Erkennung, Allergene, Zusatzstoffe
 - [docs/report.md](docs/report.md) — Report-Tool (Modi, Optionen, Vegan-Score), Output-Format, Wartung
 - [docs/vegan-strategie.md](docs/vegan-strategie.md) — Preisgestaltung (KBV) und Steuerung veganer Nachfrage

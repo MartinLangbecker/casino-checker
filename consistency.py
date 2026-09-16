@@ -10,6 +10,7 @@ Public API:
 import re
 
 from constants import (
+    DAIRY_ADDITIVES,
     DAIRY_ALLERGENS,
     EGG_ALLERGENS,
     FISCH_KEYWORDS,
@@ -20,6 +21,7 @@ from constants import (
     SCHWEIN_KEYWORDS,
     SIGNET_KEYWORDS,
     VEGAN_CONFLICTS,
+    WAX_ADDITIVE,
 )
 
 ALL_MEAT_FISH_KEYWORDS = SCHWEIN_KEYWORDS + RIND_KEYWORDS + GEFLÜGEL_KEYWORDS + FISCH_KEYWORDS
@@ -83,6 +85,7 @@ def check_consistency(dish_record):
     dish = dish_record['dish'].lower()
     category = dish_record['category'].lower()
     allergene_set = {allergen.strip() for allergen in dish_record['allergene'].split(',') if allergen.strip()}
+    zusatz_set = {z.strip() for z in dish_record.get('zusatzstoffe', '').split(',') if z.strip()}
 
     # Add-ons (Upgrades, Extras, Beilagen unter Sachbezugswert) sind keine
     # eigenständigen Gerichte. Sie werden aus Statistik und Konsistenzprüfung
@@ -115,7 +118,7 @@ def check_consistency(dish_record):
             continue
 
         if signet == 'VEGAN':
-            _check_vegan_signet(dish, allergene_set, add_finding)
+            _check_vegan_signet(dish, allergene_set, zusatz_set, add_finding)
 
         elif signet == 'VEGETARISCH':
             meat_keyword = _has_keyword_without_vegan_prefix(dish, ALL_MEAT_FISH_KEYWORDS)
@@ -199,6 +202,15 @@ def check_consistency(dish_record):
                 f"Kategorie 'Veganes Gericht' + {label} ({codes_str})",
                 {'action': 'change_category', 'suggested_signet': suggested, 'reason': reason})
 
+        # Molkerei-Zusatzstoff 18.x in veganer Kategorie → nicht vegan.
+        dairy_additives = zusatz_set & DAIRY_ADDITIVES
+        if dairy_additives:
+            codes_str = ', '.join(sorted(dairy_additives))
+            add_finding('category_additive_conflict', 'high',
+                f"Kategorie 'Veganes Gericht' + Molkerei-Zusatzstoff ({codes_str})",
+                {'action': 'change_category', 'suggested_signet': 'VEGETARISCH',
+                 'reason': f"Zusatzstoff {codes_str} (Molkereiprodukt) deklariert → nicht vegan"})
+
     # Deduplicate by issue text.
     seen_issues = set()
     unique_findings = []
@@ -209,8 +221,8 @@ def check_consistency(dish_record):
     return unique_findings
 
 
-def _check_vegan_signet(dish, allergene_set, add_finding):
-    """VEGAN-signet specific allergen/keyword checks."""
+def _check_vegan_signet(dish, allergene_set, zusatz_set, add_finding):
+    """VEGAN-signet specific allergen/keyword/additive checks."""
     for kind, codes, suggested in _allergen_conflicts(allergene_set):
         label = _ALLERGEN_LABELS[kind]
         codes_str = ', '.join(sorted(codes))
@@ -222,6 +234,23 @@ def _check_vegan_signet(dish, allergene_set, add_finding):
             reason = f"{label} ({codes_str}) deklariert → nicht vegan"
         add_finding('signet_allergen_conflict', 'high', issue,
             {'action': 'change_signet', 'suggested_signet': suggested, 'reason': reason})
+
+    # Zusatzstoff 18.x (Molkereiprodukt) → eindeutig nicht vegan, auch wenn
+    # kein Milch-Allergen g deklariert ist.
+    dairy_additives = zusatz_set & DAIRY_ADDITIVES
+    if dairy_additives:
+        codes_str = ', '.join(sorted(dairy_additives))
+        add_finding('signet_additive_conflict', 'high',
+            f"VEGAN-Signet + Molkerei-Zusatzstoff ({codes_str})",
+            {'action': 'change_signet', 'suggested_signet': 'VEGETARISCH',
+             'reason': f"Zusatzstoff {codes_str} (Molkereiprodukt) deklariert → nicht vegan"})
+
+    # Zusatzstoff 7 (gewachst) → Wachs kann tierisch sein, kein Beweis → prüfen.
+    if zusatz_set & WAX_ADDITIVE:
+        add_finding('signet_additive_conflict', 'medium',
+            "VEGAN-Signet + Zusatzstoff 7 (gewachst)",
+            {'action': 'verify_signet',
+             'reason': "Zusatzstoff 7 (gewachst) → Wachs kann tierisch sein, Signet prüfen"})
 
     # Dairy/egg allergen + conflicting keyword in description.
     if allergene_set & (DAIRY_ALLERGENS | EGG_ALLERGENS):

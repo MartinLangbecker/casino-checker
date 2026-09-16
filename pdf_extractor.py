@@ -244,6 +244,13 @@ def parse_dish_record(day, row, text_parts, signets):
     if allerg_match:
         allergene = allerg_match.group(1).strip().rstrip(',').strip()
 
+    # Extract Zusatzstoffe (comma-separated numeric codes, optional dot suffix,
+    # e.g. "2, 3, 18.1"). Stops at the next non-code token (e.g. "DB:").
+    zusatzstoffe = ''
+    zusatz_match = re.search(r'Zusatzstoffe:\s*([\d.,\s]*?)(?:\s*DB:|\s*[A-Za-z]|$)', text)
+    if zusatz_match:
+        zusatzstoffe = zusatz_match.group(1).strip().rstrip(',').strip()
+
     # Extract DB price
     price_db = None
     price_match = re.search(r'DB:\s*(\d+[.,]\d{2})', text)
@@ -266,6 +273,7 @@ def parse_dish_record(day, row, text_parts, signets):
         'category': category,
         'dish': dish,
         'allergene': allergene,
+        'zusatzstoffe': zusatzstoffe,
         'price_db': price_db,
         'signets': signets,
         'is_addon': is_addon,

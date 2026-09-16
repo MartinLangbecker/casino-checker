@@ -57,3 +57,16 @@ EGG_ALLERGENS = frozenset({'c'})
 # Fisch (d), Krebstiere (b) und Weichtiere (n) sind tierische Allergene, die
 # vegan UND vegetarisch ausschließen. Empfehlung daher FISCH-Signet.
 MARINE_ALLERGENS = frozenset({'b', 'd', 'n'})
+
+# -----------------------------------------------------------------------------
+# Zusatzstoff-Codes (Zusatzstoffe, as declared in the PDFs).
+# Relevant nur für die VEGAN-Prüfung.
+# -----------------------------------------------------------------------------
+# Zusatzstoff 18 / 18.1–18.5 = Molkereiprodukt (Milcheiweiß, Milchpulver,
+# Molkenpulver, Milch, Sahne) → eindeutig nicht vegan. Milch muss dabei nicht
+# zwingend als Allergen g deklariert sein, daher separater Indikator.
+DAIRY_ADDITIVES = frozenset({'18', '18.1', '18.2', '18.3', '18.4', '18.5'})
+
+# Zusatzstoff 7 = gewachst. Wachs kann tierisch (Bienenwachs, Schellack) oder
+# pflanzlich (Carnauba) sein → kein sicherer Nicht-Vegan-Beweis, nur Prüfhinweis.
+WAX_ADDITIVE = frozenset({'7'})

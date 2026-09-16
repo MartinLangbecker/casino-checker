@@ -281,6 +281,7 @@ def analyze_pdfs(pdfs_by_code, year, calendar_week):
                         'category': dish_record['category'],
                         'signets': dish_record['signets'],
                         'allergene': [allergen.strip() for allergen in dish_record['allergene'].split(',') if allergen.strip()],
+                        'zusatzstoffe': [z.strip() for z in dish_record.get('zusatzstoffe', '').split(',') if z.strip()],
                         'confidence': finding['confidence'],
                         'issue_type': finding['issue_type'],
                         'issue': finding['issue'],
