@@ -1,0 +1,7 @@
+# Direkte Laufzeit-Abhängigkeiten des Casino-Checkers.
+# Installation: pip install -r requirements.txt
+# Versionen gepinnt für reproduzierbare Cron-Läufe.
+pdfplumber==0.11.10
+pypdf==6.15.0
+pillow==12.3.0
+numpy==2.5.2

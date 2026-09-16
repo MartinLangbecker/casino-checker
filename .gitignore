@@ -1,0 +1,14 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Generated data / logs
+cron.log
+*.log
+findings/
+archive/
+
+# Env
+.env
