@@ -76,3 +76,24 @@ Klimaaspekte (Landverbrauch, Wasserverbrauch, CO₂) sind ein weiteres Argument,
 ### Prüfung
 
 Die messbaren Kriterien (Platzierung, Preis, Auswahl, Benennung) werden im wöchentlichen Batch-Lauf mit ausgewertet und in `findings/<year>_kw<nn>_findings.json` unter `statistics` gespeichert.
+
+### Signet-Verlässlichkeit und Kennzeichnungsklarheit
+
+Ein Signet ist nur nützlich, wenn es casino-übergreifend dasselbe bedeutet. Rückmeldungen auf identische Findings (VEGAN-Signet + Milch-Allergen) zeigen, dass das aktuell nicht der Fall ist:
+
+- **Ein Casino** meldete zurück: Das Gericht *ist* vegan, die widersprüchliche Allergenanzeige beruht auf einem Systemfehler. Das Signet war eine verlässliche Zusage, die Allergendaten waren falsch.
+- **Ein anderes Casino** meldete zurück: Das Gericht ist vegetarisch (z.B. Bowl mit Hirtenkäse, Pfannengericht mit Tsatsiki). Das VEGAN-Signet ist als Hinweis gemeint: "vegan möglich, wenn die tierische Komponente weggelassen wird."
+
+Dasselbe Signet steht also je nach Casino für zwei verschiedene Aussagen — einmal harte Zusage, einmal weicher Hinweis mit stillschweigenden Abstrichen. Es ist von außen nicht erkennbar, welcher Fall vorliegt.
+
+Probleme des "vegan durch Weglassen"-Ansatzes:
+- Die Auflage ("ohne Hirtenkäse/Tsatsiki") steht nirgends am Gericht — sie ist ungeschriebene Konvention.
+- Welche Komponente wegzulassen ist, muss erraten oder erfragt werden.
+- Die vegane Variante ist die durchdachte Komposition minus eine Komponente, nicht ein eigenständiges Gericht (siehe Eigenständigkeit oben).
+- Der Preis sinkt durch das Weglassen in der Regel nicht — weniger Gericht zum gleichen Preis.
+
+Die gleiche Unklarheit gilt für den Zusatzstoff "gewachst" (7): Wachs kann tierisch (Bienenwachs, Schellack) oder pflanzlich (Carnauba) sein. Aus der Kennzeichnung allein geht nicht hervor, welches — ein vegan ausgelobtes Gericht mit gewachster Komponente bleibt damit uneindeutig.
+
+Konsequenz: Für strikt vegan lebende Menschen ist das Signet als Entscheidungsgrundlage nur begrenzt belastbar. Man muss Abstriche in Kauf nehmen, ohne zu wissen, welcher Art — Weglassen, Nachfragen, oder es ist schlicht ein Datenfehler und eigentlich passt alles.
+
+Soll-Zustand: eine verbindliche, casino-übergreifende Signet-Definition. Ein VEGAN-Signet sollte ausschließlich bedeuten, dass das Gericht **wie serviert** vegan ist — nicht "vegan machbar". Für "vegan möglich durch Weglassen" wäre eine eigene, explizite Kennzeichnung wünschenswert (oder eine ausgewiesene vegane Variante als separates Gericht).
