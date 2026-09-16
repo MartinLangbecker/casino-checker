@@ -12,3 +12,5 @@ archive/
 
 # Env
 .env
+
+*.local.md
