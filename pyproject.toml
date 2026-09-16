@@ -1,0 +1,25 @@
+[project]
+name = "casino-checker"
+version = "0.1.0"
+description = "Konsistenzprüfung der DB-Casino-Speisekarten-PDFs (Signets vs. Allergene/Beschreibung)."
+requires-python = ">=3.9"
+
+[tool.ruff]
+line-length = 120
+target-version = "py39"
+
+[tool.ruff.lint]
+# E/F = pyflakes+pycodestyle, I = isort, UP = pyupgrade, B = bugbear,
+# F541 = f-string without placeholders, C4 = comprehensions.
+select = ["E", "F", "I", "UP", "B", "C4"]
+ignore = [
+    "E501",  # line length handled by formatter, not enforced hard
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Facade re-exports unused names on purpose.
+"casino_analyzer.py" = ["F401"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

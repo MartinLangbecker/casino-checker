@@ -5,7 +5,7 @@ Reads weekly findings JSONs and generates trend reports, casino scorecards,
 anomaly detection, and repeat-offender tracking.
 
 Usage:
-    python analyze.py [--mode MODE] [--casino CODE] [--top N] [-q]
+    python casino_report.py [--mode MODE] [--casino CODE] [--top N] [-q]
 
 Modes:
     overview   Weekly overview with key metrics (default)
@@ -15,12 +15,17 @@ Modes:
     findings   Aggregated findings with repeat-offender detection
     all        Run all modes
 """
-import sys, os, json, glob, argparse
+import argparse
+import glob
+import json
+import os
+import sys
+
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Single source of truth for signet order and confidence icons.
-from casino_analyzer import SIGNET_ORDER, CONFIDENCE_ICONS
+from constants import CONFIDENCE_ICONS, SIGNET_ORDER  # noqa: E402
 
 FINDINGS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'findings')
 
@@ -125,7 +130,7 @@ def print_overview(weeks, quiet=False, casino_filter=None):
     strategy = stats.get('vegan_strategy')
     if strategy:
         print()
-        print(f'  Vegan-Steuerung:')
+        print('  Vegan-Steuerung:')
         print(f'    Platzierung (Row 0):  {strategy["row0_ratio"]:.1%}   (Ziel: 100%)')
         print(f'    Stammessen-Preis:    {strategy["stammessen_ratio"]:.1%}   (Ziel: ≥50%)')
         print(f'    Neutraler Name:      {strategy["neutral_name_ratio"]:.1%}   (Ziel: ≥50%)')
@@ -218,7 +223,7 @@ def print_trend(weeks, casino_filter=None):
 
     # Signet counts
     print()
-    print(f'  Signet-Entwicklung:')
+    print('  Signet-Entwicklung:')
     print(f'  {"":20}' + ''.join(f' {label:>8}' for label in labels) + f'  {"Δ":>8}')
     print(f'  {"─" * 20}' + f' {"─" * 8}' * len(labels) + f'  {"─" * 8}')
 
@@ -234,7 +239,7 @@ def print_trend(weeks, casino_filter=None):
 
     # Vegan ratio
     print()
-    print(f'  Vegan-Anteil:')
+    print('  Vegan-Anteil:')
     values = [stats_of(week)['vegan_ratio'] for week in weeks]
     row = f'  {"Anteil gesamt":20}'
     for value in values:
@@ -265,7 +270,7 @@ def print_trend(weeks, casino_filter=None):
 
     # Price trends
     print()
-    print(f'  Preise (Ø):')
+    print('  Preise (Ø):')
     for signet in SIGNET_ORDER:
         values = [stats_of(week)['by_signet'].get(signet, {}).get('price', {}).get('avg', 0) for week in weeks]
         if all(value == 0 for value in values):
@@ -368,7 +373,7 @@ def print_scorecard(weeks, top=20, casino_filter=None):
     vegan_avg = by_signet.get('VEGAN', {}).get('price', {}).get('avg', 0)
     schwein_avg = by_signet.get('SCHWEIN', {}).get('price', {}).get('avg', 0)
     gesamt_avg = stats['price'].get('avg', 0)
-    print(f'  Preisvergleich:')
+    print('  Preisvergleich:')
     print(f'    Vegan Ø:     {vegan_avg:.2f}€')
     print(f'    Schwein Ø:   {schwein_avg:.2f}€')
     print(f'    Gesamt Ø:    {gesamt_avg:.2f}€')
@@ -511,7 +516,7 @@ def print_findings(weeks, casino_filter=None, quiet=False):
                 name = weeks[-1]['casinos'].get(code, {}).get('name', code)
                 latest_findings = [finding for finding in weeks[-1]['findings']
                                    if finding.get('casino_code') == code]
-                issue_types = set(finding.get('issue_type', '') for finding in latest_findings)
+                issue_types = {finding.get('issue_type', '') for finding in latest_findings}
                 print(f'  {code:5} {name:35} {len(latest_findings):>10}  {", ".join(sorted(issue_types))}')
         else:
             print('  Keine Casinos mit durchgängigen Findings.')

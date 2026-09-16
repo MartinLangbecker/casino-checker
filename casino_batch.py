@@ -3,12 +3,21 @@ Batch-Analyse aller DB Casino Speisekarten
 ==========================================
 Downloads all PDFs, archives them, runs signet/allergen consistency check, reports results.
 """
-import sys, os, subprocess, tempfile, shutil, datetime, json
+import argparse
+import datetime
+import json
+import logging
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+
 sys.stdout.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from casino_analyzer import CONFIDENCE_ICONS
-from casino_core import CASINOS, analyze_pdfs, build_findings_data
+from casino_analyzer import CONFIDENCE_ICONS  # noqa: E402
+from casino_core import CASINOS, analyze_pdfs, build_findings_data  # noqa: E402
 
 # Project root — used for archive/ and findings/ output directories.
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +25,8 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_URL = "https://casino-net.app.db.de/casinoservice/Speisekarten"
 
 CURL_BIN = "curl.exe" if sys.platform == "win32" else "curl"
+
+logger = logging.getLogger("casino")
 
 
 
@@ -44,7 +55,7 @@ def main():
 
     archive_dir = os.path.join(PROJECT_DIR, 'archive')
 
-    print(f"DB Casino Speisekarten Batch-Analyse")
+    print("DB Casino Speisekarten Batch-Analyse")
     print(f"{'='*90}")
     print(f"Casinos: {len(CASINOS)}")
     print(f"Kalenderwoche: {year}/KW{calendar_week:02d}")
@@ -98,7 +109,7 @@ def main():
 
         # Summary
         print(f"\n\n{'#'*90}")
-        print(f"ERGEBNIS")
+        print("ERGEBNIS")
         print(f"{'#'*90}")
         print(f"  Casinos analysiert:    {len(all_stats)}")
         print(f"  Gerichte gesamt:       {sum(stat['dishes'] for stat in all_stats)}")
@@ -110,7 +121,7 @@ def main():
 
         if all_issues:
             print(f"\n{'─'*90}")
-            print(f"ALLE INKONSISTENZEN:")
+            print("ALLE INKONSISTENZEN:")
             print(f"{'─'*90}")
             for issue_record in all_issues:
                 confidence_icon = CONFIDENCE_ICONS.get(issue_record['confidence'], '?')
@@ -121,14 +132,14 @@ def main():
 
         if errors:
             print(f"\n{'─'*90}")
-            print(f"PARSE-FEHLER:")
+            print("PARSE-FEHLER:")
             print(f"{'─'*90}")
             for code, name, err in errors:
                 print(f"  {code} {name}: {err}")
 
         if failed_downloads:
             print(f"\n{'─'*90}")
-            print(f"NICHT VERFÜGBAR:")
+            print("NICHT VERFÜGBAR:")
             print(f"{'─'*90}")
             for code, name in failed_downloads:
                 print(f"  {code} {name}")
@@ -148,14 +159,23 @@ def main():
 
         print(f"\nFindings gespeichert: {findings_path}")
     except Exception as analysis_error:
+        logger.exception("Analyse fehlgeschlagen")
         print(f"\n⚠️  Analyse fehlgeschlagen: {analysis_error}")
         print(f"    Download und Archiv sind abgeschlossen ({archived} PDFs). "
               f"Analyse nachholbar mit: reanalyze_archive.py")
-    print(f"\nFindings gespeichert: {findings_path}")
-    
+
     # Cleanup tmp directory
     shutil.rmtree(tmp_dir, ignore_errors=True)
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description="Download, archive and analyze all DB casino menus.")
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help="Log full tracebacks for parse/analysis errors (DEBUG level).")
+    args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.verbose else logging.WARNING,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
     main()

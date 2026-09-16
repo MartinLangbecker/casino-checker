@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 """Re-analyze archived PDFs and rebuild the weekly findings JSONs.
 
-Use after changing consistency rules in casino_analyzer.py to bring the
-historical findings/ files in line with the current logic. Operates purely
-on archive/ — no downloads.
+Use after changing consistency rules (consistency.py) to bring the historical
+findings/ files in line with the current logic. Operates purely on archive/ —
+no downloads.
 
 Usage:
-    python reanalyze_archive.py [--dry-run] [--week 2026_kw34] [--verbose]
+    python reanalyze_archive.py [--dry-run] [--week 2026_kw34] [--verbose] [--debug]
 
 --dry-run   Show per-week finding-count diffs, write nothing.
 --week      Restrict to a single week (repeatable). Default: all.
 --verbose   List added/removed findings per week.
+--debug     Log full tracebacks for parse errors (DEBUG level).
 """
+import argparse
+import json
+import logging
 import os
 import re
-import json
-import argparse
 
 from casino_core import analyze_pdfs, build_findings_data
+
+logger = logging.getLogger("casino")
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 ARCHIVE_DIR = os.path.join(PROJECT_DIR, 'archive')
@@ -29,18 +33,18 @@ ARCHIVE_RE = re.compile(r'^(20\d{2})_kw(\d{1,2})_([a-z]+)_(.+)\.pdf$')
 def group_archive_by_week():
     """Return {(year, kw): [(code, path), ...]} from archive/ PDFs."""
     weeks = {}
-    for fn in sorted(os.listdir(ARCHIVE_DIR)):
-        m = ARCHIVE_RE.match(fn)
-        if not m:
+    for filename in sorted(os.listdir(ARCHIVE_DIR)):
+        match = ARCHIVE_RE.match(filename)
+        if not match:
             continue
-        year, kw, code = int(m.group(1)), int(m.group(2)), m.group(3)
-        weeks.setdefault((year, kw), []).append((code, os.path.join(ARCHIVE_DIR, fn)))
+        year, kw, code = int(match.group(1)), int(match.group(2)), match.group(3)
+        weeks.setdefault((year, kw), []).append((code, os.path.join(ARCHIVE_DIR, filename)))
     return weeks
 
 
 def build_week(year, kw, pdfs):
     """Analyze one week's archived PDFs, return findings_data dict (batch format)."""
-    pdfs_by_code = {code: path for code, path in pdfs}
+    pdfs_by_code = dict(pdfs)
     all_stats, all_issues, all_dishes, errors = analyze_pdfs(pdfs_by_code, year, kw)
     return build_findings_data(
         year, kw, all_stats, all_issues, all_dishes,
@@ -49,8 +53,9 @@ def build_week(year, kw, pdfs):
     )
 
 
-def finding_key(f):
-    return (f['casino_code'], f['day'], f['row'], f['issue_type'], f['issue'])
+def finding_key(finding):
+    return (finding['casino_code'], finding['day'], finding['row'],
+            finding['issue_type'], finding['issue'])
 
 
 def main():
@@ -59,7 +64,14 @@ def main():
     parser.add_argument('--week', action='append', default=None,
                         help="Restrict to week(s), e.g. 2026_kw34. Repeatable.")
     parser.add_argument('--verbose', action='store_true', help="List added/removed findings.")
+    parser.add_argument('--debug', action='store_true',
+                        help="Log full tracebacks for parse errors (DEBUG level).")
     args = parser.parse_args()
+
+    logging.basicConfig(
+        level=logging.DEBUG if args.debug else logging.WARNING,
+        format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+    )
 
     weeks = group_archive_by_week()
     if not weeks:
@@ -80,13 +92,13 @@ def main():
         out_path = os.path.join(FINDINGS_DIR, f"{tag}_findings.json")
         old_findings = []
         if os.path.exists(out_path):
-            with open(out_path, encoding='utf-8') as f:
-                old_findings = json.load(f).get('findings', [])
+            with open(out_path, encoding='utf-8') as findings_file:
+                old_findings = json.load(findings_file).get('findings', [])
 
-        old_keys = {finding_key(f) for f in old_findings}
-        new_keys = {finding_key(f) for f in new_findings}
-        added = [f for f in new_findings if finding_key(f) not in old_keys]
-        removed = [f for f in old_findings if finding_key(f) not in new_keys]
+        old_keys = {finding_key(finding) for finding in old_findings}
+        new_keys = {finding_key(finding) for finding in new_findings}
+        added = [finding for finding in new_findings if finding_key(finding) not in old_keys]
+        removed = [finding for finding in old_findings if finding_key(finding) not in new_keys]
 
         total_before += len(old_findings)
         total_after += len(new_findings)
@@ -96,16 +108,16 @@ def main():
               f"(+{len(added)} / -{len(removed)}) [{action}]")
 
         if args.verbose:
-            for f in added:
-                print(f"    + {f['casino_code']} {f['day']} row{f['row']} "
-                      f"[{f['confidence']}] {f['issue']}")
-            for f in removed:
-                print(f"    - {f['casino_code']} {f['day']} row{f['row']} "
-                      f"[{f['confidence']}] {f['issue']}")
+            for finding in added:
+                print(f"    + {finding['casino_code']} {finding['day']} row{finding['row']} "
+                      f"[{finding['confidence']}] {finding['issue']}")
+            for finding in removed:
+                print(f"    - {finding['casino_code']} {finding['day']} row{finding['row']} "
+                      f"[{finding['confidence']}] {finding['issue']}")
 
         if not args.dry_run:
-            with open(out_path, 'w', encoding='utf-8') as f:
-                json.dump(new_data, f, ensure_ascii=False, indent=2)
+            with open(out_path, 'w', encoding='utf-8') as findings_file:
+                json.dump(new_data, findings_file, ensure_ascii=False, indent=2)
 
     mode = "DRY-RUN, nichts geschrieben" if args.dry_run else "geschrieben"
     print(f"\nGesamt: findings {total_before} -> {total_after} [{mode}]")

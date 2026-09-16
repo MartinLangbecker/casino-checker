@@ -1,0 +1,8 @@
+# Entwicklungs-Abhängigkeiten (Tests + Linting).
+# Enthält per -r auch die Laufzeit-Abhängigkeiten, damit
+#   pip install -r requirements-dev.txt
+# eine vollständige Entwicklungsumgebung aufsetzt.
+-r requirements.txt
+
+pytest==9.1.1
+ruff==0.16.7

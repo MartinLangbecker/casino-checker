@@ -15,13 +15,15 @@ Die Funktionen arbeiten rein auf übergebenen PDF-Pfaden und liefern Datenstrukt
 zurück. Aufrufer verantworten Download, Konsolenausgabe und das Schreiben der JSON-Dateien.
 """
 import datetime
-from statistics import median
+import logging
 from collections import Counter
+from statistics import median
 
-from casino_analyzer import (
-    extract_menu, check_consistency,
-    SACHBEZUGSWERT, SIGNET_ORDER, NON_DIET_SIGNETS,
-)
+from consistency import check_consistency
+from constants import NON_DIET_SIGNETS, SACHBEZUGSWERT, SIGNET_ORDER
+from pdf_extractor import extract_menu
+
+logger = logging.getLogger("casino")
 
 # All known casino PDFs from the DB Planet listing
 CASINOS = {
@@ -261,7 +263,7 @@ def analyze_pdfs(pdfs_by_code, year, calendar_week):
                 'code': code,
                 'name': name,
                 'dishes': len(results),
-                'days': len(set(dish_record['day'] for dish_record in results)),
+                'days': len({dish_record['day'] for dish_record in results}),
                 'issues': [],
                 'results': results,
             }
@@ -290,6 +292,7 @@ def analyze_pdfs(pdfs_by_code, year, calendar_week):
             all_stats.append(stats)
 
         except Exception as error:
+            logger.exception("Parse-Fehler bei %s (%s)", code, name)
             errors.append((code, name, str(error)[:80]))
 
     return all_stats, all_issues, all_dishes, errors

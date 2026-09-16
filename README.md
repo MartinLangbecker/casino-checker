@@ -37,24 +37,35 @@ Automatisierte Konsistenzprüfung der DB Casino Speisekarten-PDFs. Erkennt fehle
 python casino_analyzer.py <pdf_path>
 
 # Batch über alle Casinos (Download + Archiv + Analyse + Findings)
-python casino_batch.py
+python casino_batch.py [--verbose]
 
 # Analyse & Trends (liest findings/-Daten)
-python analyze.py [--mode MODE] [--casino CODE] [--top N] [-q]
+python casino_report.py [--mode MODE] [--casino CODE] [--top N] [-q]
 
 # Findings aus dem Archiv neu berechnen (nach Regeländerung)
-python reanalyze_archive.py [--dry-run] [--week 2026_kw34] [--verbose]
+python reanalyze_archive.py [--dry-run] [--week 2026_kw34] [--verbose] [--debug]
 ```
+
+`--verbose` bei `casino_batch.py` und `--debug` bei `reanalyze_archive.py` aktivieren
+volle Tracebacks für Parse-Fehler (Logging auf DEBUG-Level).
 
 ## Verzeichnisstruktur
 
 ```
 casino-checker/
-├── casino_analyzer.py      # Extraktion + Konsistenzprüfung (einzelnes PDF)
+├── casino_analyzer.py      # Facade + CLI (einzelnes PDF), re-exportiert die Module unten
+├── constants.py            # Geteilte Konstanten: Signets, Keywords, Allergen-Sets
+├── signet_classifier.py    # Pixel-basierte Signet-Klassifikation (classify_signet)
+├── pdf_extractor.py        # PDF → Dish-Records (extract_menu, extract_page, PageGrid)
+├── consistency.py          # Konsistenzregeln (check_consistency)
 ├── casino_core.py          # Geteilte Analyse-/Aggregationslogik (analyze_pdfs, build_findings_data, Statistik)
 ├── casino_batch.py         # Batch: Download + Archiv + Analyse + Findings
 ├── reanalyze_archive.py    # Findings aus archivierten PDFs neu berechnen (I/O-frei via casino_core)
-├── analyze.py              # Trend-Analyse, Scorecards, Anomalien, Repeat Offenders
+├── casino_report.py        # Trend-Analyse, Scorecards, Anomalien, Repeat Offenders
+├── tests/                  # pytest-Tests (test_consistency.py)
+├── pyproject.toml          # ruff- + pytest-Konfiguration
+├── requirements.txt        # Laufzeit-Abhängigkeiten (gepinnt)
+├── requirements-dev.txt    # Zusätzlich: pytest, ruff
 ├── README.md
 ├── cron.log                # Cron-Ausgabe (nur auf Pi)
 ├── venv/                   # Python-Virtualenv (nur auf Pi)
@@ -82,6 +93,22 @@ Konsolenausgabe zeigt Fortschritt und Zusammenfassung.
 
 ```
 pip install -r requirements.txt
+```
+
+Für Entwicklung (Tests + Linting) zusätzlich:
+
+```
+pip install -r requirements-dev.txt
+```
+
+### Tests und Linting
+
+```bash
+# Tests
+pytest
+
+# Linter
+ruff check .
 ```
 
 ## Casino-Kürzel
@@ -134,6 +161,8 @@ Weitere Signets (selten, aktuell nicht im Classifier):
 | Geflügel | 0.7–0.95 | 0.3–2% | 0% | 65–90 px |
 | Fisch | 0.8–1.05 | 1.8–5% | 0% | 70–90 px |
 | Nachhaltig | 0.8–1.1 | 0% | 30–60% | 150–300 px |
+
+Die konkreten Schwellwerte sind als benannte Konstanten am Kopf von `signet_classifier.py` gebündelt (`VEGAN_MIN_ASPECT`, `FISCH_MIN_BLACK_PCT` etc.). Bei Layout-Änderungen der PDFs dort rekalibrieren.
 
 ## Allergene
 
@@ -202,7 +231,7 @@ Zusätzlich: Kategorie "Add-on" (explizit im PDF so benannt).
 - **Signet-Classifier** kann bei stark komprimierten JPEGs unsicher sein
 - **Multi-Page-PDFs** (München, Berlin, Hamburg): Seite 2+ enthält Add-ons für dieselben Wochentage
 
-## Analyse (analyze.py)
+## Analyse (casino_report.py)
 
 Liest die wöchentlichen Findings-JSONs und generiert Trend-Reports, Casino-Rankings und Anomalie-Erkennung.
 
@@ -241,24 +270,24 @@ Gewichteter Composite-Score (0–100) aus vier Metriken:
 
 ```bash
 # Aktuelle Woche: Übersicht
-python analyze.py
+python casino_report.py
 
 # Alle Modi
-python analyze.py --mode all
+python casino_report.py --mode all
 
 # Trend über alle verfügbaren Wochen
-python analyze.py --mode trend
+python casino_report.py --mode trend
 
 # Casino-Details für Krefeld
-python analyze.py --mode findings --casino cma
+python casino_report.py --mode findings --casino cma
 
 # Top 10 Scorecards
-python analyze.py --mode scorecard --top 10
+python casino_report.py --mode scorecard --top 10
 ```
 
 ## Geplante Features
 
-- [x] Trend-Analyse über Wochen (Vegan-Anteil, Preisentwicklung) → `analyze.py`
+- [x] Trend-Analyse über Wochen (Vegan-Anteil, Preisentwicklung) → `casino_report.py`
 - [ ] E-Mail-Benachrichtigung bei Findings an Casinos (braucht besseres Konzept)
 
 ## Steuerung veganer Nachfrage
@@ -318,7 +347,7 @@ Die messbaren Kriterien (Platzierung, Preis, Auswahl, Benennung) werden im wöch
 
 ### Seltene Signets ergänzen
 
-Folgende Signets existieren laut Signet-Dokumentation, treten aber aktuell in keinem PDF auf. Sobald sie auftreten, müssen sie im Classifier (`classify_signet()`) anhand eines Beispiel-PDFs profiliert werden:
+Folgende Signets existieren laut Signet-Dokumentation, treten aber aktuell in keinem PDF auf. Sobald sie auftreten, müssen sie im Classifier (`classify_signet()` in `signet_classifier.py`) anhand eines Beispiel-PDFs profiliert werden:
 
 - Schwein+Geflügel
 - Rind+Geflügel
@@ -333,4 +362,4 @@ Vorgehen: PDF mit neuem Signet im Archiv identifizieren → Pixel-Profil extrahi
 
 ### Sachbezugswert aktualisieren
 
-Der Sachbezugswert (`SACHBEZUGSWERT` in `casino_analyzer.py`) wird jährlich vom BMF angepasst. Aktueller Wert: 4,60 € (2026). Bei Änderung im Folgejahr die Konstante aktualisieren.
+Der Sachbezugswert (`SACHBEZUGSWERT` in `constants.py`) wird jährlich vom BMF angepasst. Aktueller Wert: 4,60 € (2026). Bei Änderung im Folgejahr die Konstante aktualisieren.
